@@ -59,7 +59,11 @@ db.ready(function () {
                 case "whereis":
                     if (info in player.aliases) { info = player.aliases[info] }
                     get(info).then(function(pos) {
-                        console.log("%s is at %j", info, pos)
+                        if (!pos) {
+                            console.log("%s appears to be lost in the void..", info)
+                        } else {
+                            console.log("%s is at %j", info, pos)
+                        }
                         readCommand(player);
                     })
                     return
