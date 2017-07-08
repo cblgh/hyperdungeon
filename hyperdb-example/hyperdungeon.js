@@ -11,7 +11,9 @@ var optimized = process.argv.indexOf("--optimized") > -1
 var local = hypercore("./dungeon-dir", {valueEncoding: "json", sparse: true})
 var db = hyperdb([
   // st <- <dat:hash>: put what you sync from <dat:hash> into the storage st
-  hypercore(st, "48e2619899edb24f4d5031b5e0cf16e6caef0cc20710c8c60783428f4e8d2ef3", {valueEncoding: "json", sparse: true}),
+  // hypercore(st, "48e2619899edb24f4d5031b5e0cf16e6caef0cc20710c8c60783428f4e8d2ef3", {valueEncoding: "json", sparse: true}), // mafintosh
+  hypercore(st, "cd1034cedfe2dccdd225a96abcf0a5576158426ddd6078c2f89aa352da77115d", {valueEncoding: "json", sparse: true}), // wintermute
+  // hypercore(st, "4ae572a70f1950152a0fe3ead0d997b2bf1a29af083f7dfacfa3b3b6e2972b48", {valueEncoding: "json", sparse: true}), // macbook
   local
 ])
 
@@ -19,7 +21,6 @@ var direction = process.argv[2] || "north"
 
 db.ready(function () {
   var id = local.key.toString("hex");
-  id = "teiast";
   console.log("local key", id);
   var sw = hyperdiscovery(db, {live: true})
   if (process.argv.indexOf("--sync") > -1) {
@@ -33,6 +34,7 @@ db.ready(function () {
     // haxx to make sure we have a connection lol
     var now = Date.now()
 
+    console.log("Swarm joined!");
     db.feeds[0].on("download", function (index) {
       console.log("Downloaded block", index)
     })
@@ -65,8 +67,8 @@ db.ready(function () {
             // update current tile with this player's id
             return update(JSON.stringify(position), id)
         }).then(function() {
-            console.log("Closing...");
-            sw.destroy();
+            // console.log("Closing...");
+            // sw.destroy();
         });
     })
   })
@@ -131,7 +133,7 @@ function get(key) {
 
 function storage (name) {
   if (name === "data") return pages("words.db/data")
-  return raf("words.db/" + name)
+  return raf("dungeon.map2/" + name)
 }
 
 function noop () {}
