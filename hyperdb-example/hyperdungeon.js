@@ -40,39 +40,39 @@ db.ready(function () {
         console.log("we got a connection")
     })
 
-    var aliases = {}
-    var readCommand = function(position) {
+    var readCommand = function(player) {
         rl.question("> ", function(reply) {
             [reply, info] = reply.split(" ")
             switch (reply) {
                 case "north": 
-                    position.y += 1
+                    player.pos.y += 1
                     break
                 case "south":
-                    position.y -= 1
+                    player.pos.y -= 1
                     break
                 case "east":
-                    position.x += 1
+                    player.pos.x += 1
                     break
                 case "west":
-                    position.x -= 1
+                    player.pos.x -= 1
                     break
                 case "whereis":
-                    if (info in aliases) { info = aliases[info] }
+                    if (info in player.aliases) { info = player.aliases[info] }
                     get(info).then(function(pos) {
                         console.log("%s is at %j", info, pos)
-                        readCommand(position);
+                        readCommand(player);
                     })
                     return
                 case "alias":
                     [friendId, alias] = info.split("=")
-                    aliases[alias] = friendId
+                    player.aliases[alias] = friendId
                     console.log("%s is now known as %s", friendId, alias)
+                    update("aliases", JSON.stringify(player.aliases))
                     break
                 case "look":
                     get(id).then(function(pos) {
                         console.log("your position is currently %j", pos)
-                        readCommand(position)
+                        readCommand(player)
                     })
                     return
                 case "exit":
@@ -82,8 +82,8 @@ db.ready(function () {
                 default:
                     console.log("didn't recognize " + reply)
             }
-            readCommand(position)
-            update(id, JSON.stringify(position))
+            readCommand(player)
+            update(id, JSON.stringify(player.pos))
         })
     }
 
@@ -95,7 +95,10 @@ db.ready(function () {
             console.log("new player")
             position = {x: 0, y: 0}
         }
-        readCommand(position)
+        get("aliases").then(function(aliases) {
+            if (!aliases) { console.log("oops"); aliases = JSON.stringify({}) }
+            readCommand({pos: position, aliases: JSON.parse(aliases)})
+        })
     })
 })
 
