@@ -17,11 +17,10 @@ var db = hyperdb([
 
 var direction = process.argv[2] || "north"
 
-
 db.ready(function () {
   var id = local.key.toString("hex");
+  id = "teiast";
   console.log("local key", id);
-  var position = {x: 0, y: 0}
   var sw = hyperdiscovery(db, {live: true})
   if (process.argv.indexOf("--sync") > -1) {
     db.feeds[0].download({start: 0, end: -1})
@@ -39,33 +38,69 @@ db.ready(function () {
     })
 
     // fetch local player's position from hyperdb
-    db.get(id, function(err, nodes) {
-        if (err) { console.log(err); return; }
-        if (nodes && nodes[0]) {
-            position = JSON.parse(nodes[0].value)
-
-            // update the position with the direction the player traveled
-            if (direction === "north") {
-                position.y += 1;
-            } else if (direction === "south") {
-                position.y -= 1;
-            } else if (direction === "west") {
-                position.x -= 1;
-            } else if (direction === "east") {
-                position.x += 1;
-            }
-            console.log(position);
-           
-            // save the new position
-            db.put(id, JSON.stringify(position), function(err, nodes) {
-                console.log("Updated position!");
-                if (err)  console.log(err);
-                    sw.destroy();
-            })
+    get(id).then(function(position) {
+        if (!position) {
+            // new player, place them at the center
+            console.log("new player");
+            var position = {x: 0, y: 0}
         }
+        // update the position with the direction the player traveled
+        if (direction === "north") {
+            position.y += 1;
+        } else if (direction === "south") {
+            position.y -= 1;
+        } else if (direction === "west") {
+            position.x -= 1;
+        } else if (direction === "east") {
+            position.x += 1;
+        }
+        console.log(position);
+
+        // TODO: how do i save information to a tile?
+        // if every client saves to the same position, "0-0": "{data: ...}", will i be able to iterate through all
+        // of the information, composing a large collection?
+        
+        // save the local player's new position
+        update(id, JSON.stringify(position)).then(function() {
+            // update current tile with this player's id
+            return update(JSON.stringify(position), id)
+        }).then(function() {
+            console.log("Closing...");
+            sw.destroy();
+        });
     })
   })
 })
+
+function update(key, val) {
+    return new Promise(function(resolve, reject) {
+        db.put(key, val, function(err, nodes) {
+            if (err) {
+                console.log(err);
+                reject(err);
+            }
+            resolve();
+        });
+    });
+}
+
+function get(key) {
+    return new Promise(function(resolve, reject) {
+        db.get(key, function(err, nodes) {
+            if (err) { 
+                console.log("err");
+                console.log(err); 
+                resolve(null);
+            } else if (nodes && nodes[0]) {
+                // TODO: insert code to check if many nodes have their own value at this spot
+                // console.log("GOT EM");
+                resolve(JSON.parse(nodes[0].value))
+            } else {
+                resolve(null);
+            }
+        })
+    })
+}
   // if (process.argv.indexOf("--add") > -1) {
   //       // try to put in a nonsense word to prove that i can write to my feed
   //       db.put(word, 1, function (err, nodes) {
