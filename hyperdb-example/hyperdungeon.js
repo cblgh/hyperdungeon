@@ -40,6 +40,7 @@ db.ready(function () {
         console.log("we got a connection")
     })
 
+    var aliases = {}
     var readCommand = function(position) {
         rl.question("> ", function(reply) {
             [reply, info] = reply.split(" ")
@@ -57,11 +58,17 @@ db.ready(function () {
                     position.x -= 1
                     break
                 case "whereis":
+                    if (info in aliases) { info = aliases[info] }
                     get(info).then(function(pos) {
                         console.log("%s is at %j", info, pos)
                         readCommand(position);
                     })
                     return
+                case "alias":
+                    [friendId, alias] = info.split("=")
+                    aliases[alias] = friendId
+                    console.log("%s is now known as %s", friendId, alias)
+                    break
                 case "look":
                     get(id).then(function(pos) {
                         console.log("your position is currently %j", pos)
