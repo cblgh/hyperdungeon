@@ -13,8 +13,8 @@ var local = hypercore("./dungeon-dir", {valueEncoding: "json", sparse: true})
 var db = hyperdb([
     // st <- <dat:hash>: put what you sync from <dat:hash> into the storage st
     // hypercore(st, "48e2619899edb24f4d5031b5e0cf16e6caef0cc20710c8c60783428f4e8d2ef3", {valueEncoding: "json", sparse: true}), // mafintosh
-    // hypercore(st, "cd1034cedfe2dccdd225a96abcf0a5576158426ddd6078c2f89aa352da77115d", {valueEncoding: "json", sparse: true}), // wintermute
-    hypercore(st, "d5d0b189af6b981ab7942c3d71103e9a1cbfa32e203220e830b7a16deac6cc43", {valueEncoding: "json", sparse: true}), // macbook
+    hypercore(st, "5c73d8199d83875b62b19b28893b374189e439e760dc070497cfbd643bfb8fbe", {valueEncoding: "json", sparse: true}), // wintermute
+    // hypercore(st, "d5d0b189af6b981ab7942c3d71103e9a1cbfa32e203220e830b7a16deac6cc43", {valueEncoding: "json", sparse: true}), // macbook
     local
 ])
 
@@ -40,10 +40,17 @@ db.ready(function () {
         console.log("we got a connection")
     })
 
+    function split(input) {
+        input = input.split(" ")
+        var command = input.splice(0, 1)[0] // splice out the command 
+        return [command, input.join(" ")] // and keep the rest of the string
+    }
     var readCommand = function(player) {
         rl.question("> ", function(reply) {
-            [reply, info] = reply.split(" ")
-            switch (reply) {
+            var command, input
+            [command, input] = split(reply)
+            console.log(command, " + ", input)
+            switch (command) {
                 case "north": 
                     player.pos.y += 1
                     break
@@ -57,26 +64,38 @@ db.ready(function () {
                     player.pos.x -= 1
                     break
                 case "whereis":
-                    if (info in player.aliases) { info = player.aliases[info] }
-                    get(info).then(function(pos) {
+                    if (input in player.aliases) { input = player.aliases[input] }
+                    get(input).then(function(pos) {
                         if (!pos) {
-                            console.log("%s appears to be lost in the void..", info)
+                            console.log("%s appears to be lost in the void..", input)
                         } else {
-                            console.log("%s is at %j", info, pos)
+                            console.log("%s is at %j", input, pos)
                         }
                         readCommand(player);
                     })
                     return
                 case "alias":
-                    [friendId, alias] = info.split("=")
+                    [friendId, alias] = input.split("=")
                     player.aliases[alias] = friendId
                     console.log("%s is now known as %s", friendId, alias)
                     update("aliases", JSON.stringify(player.aliases))
                     break
                 case "look":
                     get(id).then(function(pos) {
-                        console.log("your position is currently %j", pos)
-                        readCommand(player)
+                        console.log("your position is currently %s", pos)
+                        get(pos + "/description").then(function(description) {
+                            if (description) console.log(description);
+                            console.log(player)
+                            readCommand(player)
+                        })
+                    })
+                    return
+                case "describe":
+                    get(id).then(function(pos) {
+                        update(pos + "/description", input).then(function() {
+                            console.log("your description will be remembered..")
+                            readCommand(player)
+                        })
                     })
                     return
                 case "exit":
