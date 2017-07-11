@@ -12,9 +12,9 @@ var local = hypercore("./dungeon-dir", {valueEncoding: "json", sparse: true})
 var db = hyperdb([
     // st <- <dat:hash>: put what you sync from <dat:hash> into the storage st
     // hypercore(st, "48e2619899edb24f4d5031b5e0cf16e6caef0cc20710c8c60783428f4e8d2ef3", {valueEncoding: "json", sparse: true}), // mafintosh
-    // hypercore(st, "5c73d8199d83875b62b19b28893b374189e439e760dc070497cfbd643bfb8fbe", {valueEncoding: "json", sparse: true}), // wintermute
-    hypercore(st, "d5d0b189af6b981ab7942c3d71103e9a1cbfa32e203220e830b7a16deac6cc43", {valueEncoding: "json", sparse: true}), // macbook
-    local
+    // hypercore(st, "d5d0b189af6b981ab7942c3d71103e9a1cbfa32e203220e830b7a16deac6cc43", {valueEncoding: "json", sparse: true}) // macbook
+    local, // macbook
+    hypercore(st, "5c73d8199d83875b62b19b28893b374189e439e760dc070497cfbd643bfb8fbe", {valueEncoding: "json", sparse: true}), // wintermute
 ])
 
 var rl = readline.createInterface({
@@ -51,7 +51,6 @@ db.ready(function () {
             console.log("a peer has left, zarathystras's forces grow weaker (" + peer.key.toString("hex") + ")")
         })
     })
-
 
     var readCommand = function(player) {
         rl.question("> ", function(reply) {
@@ -91,34 +90,54 @@ db.ready(function () {
                 case "help":
                     printHelp()
                     break
+                case "warp":
+                    // warp <nick|id>=<x,y
+                    var x, y, target, location
+                    input = input.split("=")
+                    target = input[0]
+                    // remap from alias if used && exists
+                    if (target in player.aliases) { target = player.aliases[target] }
+                    // get the location
+                    location = input[1].split(",")
+                    console.log("warping %s to (%s, %s)", target, location[0], location[1])
+                    // update target's location
+                    update(id + "/pos", JSON.stringify({x: location[0], y: location[1]}))
+                    break
                 case "whereis":
+                    // get id if alias was used
                     if (input in player.aliases) { input = player.aliases[input] }
-                    get(input).then(function(pos) {
-                        if (!pos) {
-                            console.log("%s appears to be lost in the void..", input)
-                        } else {
+                    get(input + "/pos").then(function(pos) {
+                        if (pos) {
                             console.log("%s is at %s", input, pos)
+                        } else {
+                            console.log("%s appears to be lost in the void..", input)
                         }
-                        readCommand(player);
+                        readCommand(player)
                     })
                     return
                 case "alias":
                     [alias, friendId] = input.split("=")
                     player.aliases[alias] = friendId
                     console.log("%s is now known as %s", friendId, alias)
-                    update("aliases", JSON.stringify(player.aliases))
+                    update(id + "/aliases", JSON.stringify(player.aliases))
+                    break
+                case "whoami":
+                    console.log("you are " + id)
+                    console.log("your position is currently %j", player.pos)
+                    break
+                case "aliases":
+                    console.log("%j", player.aliases)
                     break
                 case "look":
-                    get(id).then(function(pos) {
+                    get(id + "/pos").then(function(pos) {
                         console.log("your position is currently %s", pos)
                         get(pos + "/description").then(function(description) {
-                            if (description) console.log(description);
-                            console.log(player)
+                            if (!description) {
+                                description = "you're surrounded by the rock walls you've known since birth"
+                            }
+                            console.log(description) 
                             readCommand(player)
-                        }).catch(function() {
-                            console.log("you're surrounded by the rock walls you've known since birth")
-                            readCommand(player)
-                        });
+                        })
                     })
                     return
                 case "describe":
@@ -138,7 +157,7 @@ db.ready(function () {
                     console.log("didn't recognize " + reply)
             }
             readCommand(player)
-            update(id, JSON.stringify(player.pos))
+            update(id + "/pos", JSON.stringify(player.pos))
         })
     }
 
@@ -152,9 +171,13 @@ db.ready(function () {
         }
 
         // fetch aliases
-        get("aliases").then(function(aliases) {
-            if (!aliases) { console.log("oops"); aliases = JSON.stringify({}) }
-            readCommand({pos: position, aliases: JSON.parse(aliases)})
+        get(id + "/aliases").then(function(aliases) {
+            console.log(aliases)
+            if (!aliases) {
+                readCommand({pos: position, aliases: {}})
+            } else {
+                readCommand({pos: position, aliases: JSON.parse(aliases)})
+            }
         })
     })
 })
@@ -175,9 +198,10 @@ function get(key) {
     return new Promise(function(resolve, reject) {
         db.get(key, function(err, nodes) {
             if (err) { 
+                // not found
                 // console.log("err")
                 // console.log(err) 
-                reject();
+                resolve(null)
             } else if (nodes && nodes[0]) {
                 resolve(nodes[0].value)
             } else {
