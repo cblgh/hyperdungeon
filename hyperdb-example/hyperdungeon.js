@@ -1,21 +1,11 @@
 var hyperdb = require("hyperdb")
 var hypercore = require("hypercore")
 var hyperdiscovery = require("hyperdiscovery")
-var pages = require("random-access-page-files")
-var raf = require("random-access-file")
-var ram = require("random-access-memory")
 var readline = require("readline")
+var config = require("./config.js")
 
-var st = process.argv.indexOf("--storage") > -1 ? storage : ram
-
-var local = hypercore("./dungeon-dir", {valueEncoding: "json", sparse: true})
-var db = hyperdb([
-    // st <- <dat:hash>: put what you sync from <dat:hash> into the storage st
-    // hypercore(st, "48e2619899edb24f4d5031b5e0cf16e6caef0cc20710c8c60783428f4e8d2ef3", {valueEncoding: "json", sparse: true}), // mafintosh
-    // hypercore(st, "d5d0b189af6b981ab7942c3d71103e9a1cbfa32e203220e830b7a16deac6cc43", {valueEncoding: "json", sparse: true}) // macbook
-    local, // macbook
-    hypercore(st, "5c73d8199d83875b62b19b28893b374189e439e760dc070497cfbd643bfb8fbe", {valueEncoding: "json", sparse: true}), // wintermute
-])
+var local = config.local
+var db = hyperdb(config.feeds)
 
 var rl = readline.createInterface({
     input: process.stdin,
@@ -209,11 +199,6 @@ function get(key) {
             }
         })
     })
-}
-
-function storage (name) {
-    if (name === "data") return pages("dungeon.map/data")
-    return raf("dungeon.map/" + name)
 }
 
 function noop () {}
