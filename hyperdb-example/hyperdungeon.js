@@ -89,9 +89,11 @@ db.ready(function () {
                     if (target in player.aliases) { target = player.aliases[target] }
                     // get the location
                     location = input[1].split(",")
-                    console.log("warping %s to (%s, %s)", target, location[0], location[1])
+                    location = {x: parseInt(location[0]), y: parseInt(location[1])}
+                    console.log("warping %s to %s", target, location)
+                    console.log(location, player.pos)
                     // update target's location
-                    update(id + "/pos", JSON.stringify({x: location[0], y: location[1]}))
+                    update(target + "/pos", JSON.stringify(location))
                     break
                 case "whereis":
                     // get id if alias was used
@@ -112,14 +114,18 @@ db.ready(function () {
                     update(id + "/aliases", JSON.stringify(player.aliases))
                     break
                 case "whoami":
-                    console.log("you are " + id)
-                    console.log("your position is currently %j", player.pos)
+                    get(id + "/pos").then(function(pos) {
+                        player.pos = JSON.parse(pos) // update local pos in case we have been warped
+                        console.log("you are " + id)
+                        console.log("your position is currently %j", pos)
+                    })
                     break
                 case "aliases":
                     console.log("%j", player.aliases)
                     break
                 case "look":
                     get(id + "/pos").then(function(pos) {
+                        player.pos = JSON.parse(pos) // update local pos in case we have been warped
                         console.log("your position is currently %s", pos)
                         get(pos + "/description").then(function(description) {
                             if (!description) {
@@ -156,8 +162,8 @@ db.ready(function () {
         position = JSON.parse(position)
         if (!position) {
             // new player, place them at the center
-            console.log("new player")
             position = {x: 0, y: 0}
+            console.log("new player")
         }
 
         // fetch aliases
