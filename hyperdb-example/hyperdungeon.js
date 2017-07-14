@@ -125,13 +125,14 @@ db.ready(function () {
                         break
                     case "whereis":
                         // syntax: whereis <id|alias>
+                        var target = input
                         // get id if alias was used
-                        if (input in player.aliases) { input = player.aliases[input] }
-                        get(input + "/pos").then(function(pos) {
+                        if (target in player.aliases) { target = player.aliases[target] }
+                        get(target + "/pos").then(function(pos) {
                             if (pos) {
-                                console.log("%s is at %s", input, pos)
+                                console.log("%s is at %s", target, pos)
                             } else {
-                                console.log("%s appears to be lost in the void..", input)
+                                console.log("%s appears to be lost in the void..", target)
                             }
                             readCommand()
                         })
