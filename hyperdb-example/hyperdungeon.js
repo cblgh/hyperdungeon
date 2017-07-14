@@ -19,12 +19,23 @@ function printHelp() {
     console.log("commands: look, whereis <nick|id>, alias <nick>=<id>, describe <description>, exit")
 }
 
+function savePlayers(playerId, state) {
+    get("players", function(players) {
+        if (!players) { players = JSON.stringify({}) }
+        players = JSON.parse(players)
+        players[playerId] = state
+        update("players", JSON.stringify(players))
+    })
+}
+
 function split(input) {
     input = input.split(" ")
     var command = input.splice(0, 1)[0] // splice out the command 
     return [command, input.join(" ")] // and keep the rest of the string
 }
 
+// i don't need to JSON.parse, JSON.stringify all the time do i?
+// check out valueEncoding of hyperdb / ask mafintosh about it / check out his code for hyperdictionary
 db.ready(function () {
     var id = local.key.toString("hex")
     console.log("local key", id)
@@ -37,8 +48,10 @@ db.ready(function () {
 
     sw.on("connection", function(peer, type) {
         console.log("a new peer has joined, zarathystras's forces grow stronger (" + peer.key.toString("hex") + ")")
+        savePlayers(peer.key.toString("hex"), "connected")
         peer.on("close", function() {
             console.log("a peer has left, zarathystras's forces grow weaker (" + peer.key.toString("hex") + ")")
+            savePlayers(peer.key.toString("hex"), "disconnected")
         })
     })
 
