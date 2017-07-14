@@ -81,11 +81,11 @@ db.ready(function () {
                     printHelp()
                     break
                 case "warp":
-                    // warp <nick|id>=<x,y
+                    // syntax: warp <nick|id>=<x,y
                     var x, y, target, location
                     input = input.split("=")
                     target = input[0]
-                    // remap from alias if used && exists
+                    // remap from alias if used and alias exists
                     if (target in player.aliases) { target = player.aliases[target] }
                     // get the location
                     location = input[1].split(",")
@@ -96,6 +96,7 @@ db.ready(function () {
                     update(target + "/pos", JSON.stringify(location))
                     break
                 case "whereis":
+                    // syntax: whereis <id|alias>
                     // get id if alias was used
                     if (input in player.aliases) { input = player.aliases[input] }
                     get(input + "/pos").then(function(pos) {
@@ -108,6 +109,7 @@ db.ready(function () {
                     })
                     return
                 case "alias":
+                    // syntax: alias <nick>=<id>
                     [alias, friendId] = input.split("=")
                     player.aliases[alias] = friendId
                     console.log("%s is now known as %s", friendId, alias)
