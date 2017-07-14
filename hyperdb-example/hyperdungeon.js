@@ -49,7 +49,7 @@ db.ready(function () {
                 return JSON.parse(pos)
             }).then(function(pos) {
                 return get(id + "/aliases", function(aliases) {
-                    if (!aliases) { aliases = JSON.stringify(aliases) }
+                    if (!aliases) { aliases = JSON.stringify({}) }
                      resolve({id: id, pos: pos, aliases: JSON.parse(aliases)})
                 })
             })
