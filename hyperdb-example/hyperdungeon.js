@@ -42,7 +42,33 @@ db.ready(function () {
         })
     })
 
-    var readCommand = function(player) {
+    function getState(playerId) {
+        return new Promise(function(reject, resolve) {
+            get(id + "/pos", function(pos) {
+                if (!pos) { pos = JSON.stringify({x: 0, y: 0}) }
+                return JSON.parse(pos)
+            }).then(function(pos) {
+                return get(id + "/aliases", function(aliases) {
+                    if (!aliases) { aliases = JSON.stringify(aliases) }
+                     resolve({id: id, pos: pos, aliases: JSON.parse(aliases)})
+                })
+            })
+        })
+    }
+
+    // is this how promise chaining ought to be written? prod lykkin
+    function saveState(player) {
+        return new Promise(function(reject, resolve) {
+            update(player.id + "/pos", player.pos)
+            .then(function() {
+                return update(player.id + "/aliases", player.aliases)
+            }).then(function() {
+                resolve()
+            })
+        })
+    }
+
+    var readCommand = function() {
         rl.question("> ", function(reply) {
             var command, input
             [command, input] = split(reply)
@@ -54,130 +80,108 @@ db.ready(function () {
                 case "ambulate":
                     command = input
             }
-            
-            // handle commands
-            switch (command) {
-                case "n":
-                case "north": 
-                    console.log("you move north")
-                    player.pos.y += 1
-                    break
-                case "s":
-                case "south":
-                    console.log("you move south")
-                    player.pos.y -= 1
-                    break
-                case "e":
-                case "east":
-                    console.log("you move east")
-                    player.pos.x += 1
-                    break
-                case "w":
-                case "west":
-                    console.log("you move west")
-                    player.pos.x -= 1
-                    break
-                case "help":
-                    printHelp()
-                    break
-                case "warp":
-                    // syntax: warp <nick|id>=<x,y
-                    var x, y, target, location
-                    input = input.split("=")
-                    target = input[0]
-                    // remap from alias if used and alias exists
-                    if (target in player.aliases) { target = player.aliases[target] }
-                    // get the location
-                    location = input[1].split(",")
-                    location = {x: parseInt(location[0]), y: parseInt(location[1])}
-                    console.log("warping %s to %s", target, location)
-                    console.log(location, player.pos)
-                    // update target's location
-                    update(target + "/pos", JSON.stringify(location))
-                    break
-                case "whereis":
-                    // syntax: whereis <id|alias>
-                    // get id if alias was used
-                    if (input in player.aliases) { input = player.aliases[input] }
-                    get(input + "/pos").then(function(pos) {
-                        if (pos) {
-                            console.log("%s is at %s", input, pos)
-                        } else {
-                            console.log("%s appears to be lost in the void..", input)
-                        }
-                        readCommand(player)
-                    })
-                    return
-                case "alias":
-                    // syntax: alias <nick>=<id>
-                    [alias, friendId] = input.split("=")
-                    player.aliases[alias] = friendId
-                    console.log("%s is now known as %s", friendId, alias)
-                    update(id + "/aliases", JSON.stringify(player.aliases))
-                    break
-                case "whoami":
-                    get(id + "/pos").then(function(pos) {
-                        player.pos = JSON.parse(pos) // update local pos in case we have been warped
-                        console.log("you are " + id)
-                        console.log("your position is currently %j", pos)
-                    })
-                    break
-                case "aliases":
-                    console.log("%j", player.aliases)
-                    break
-                case "look":
-                    get(id + "/pos").then(function(pos) {
-                        player.pos = JSON.parse(pos) // update local pos in case we have been warped
-                        console.log("your position is currently %s", pos)
-                        get(pos + "/description").then(function(description) {
+
+            // get latest state information (useful in case of a warp by another player)
+            getState(id)
+            .then(function(player) {
+                // handle commands
+                switch (command) {
+                    case "n":
+                    case "north": 
+                        console.log("you move north")
+                        player.pos.y += 1
+                        break
+                    case "s":
+                    case "south":
+                        console.log("you move south")
+                        player.pos.y -= 1
+                        break
+                    case "e":
+                    case "east":
+                        console.log("you move east")
+                        player.pos.x += 1
+                        break
+                    case "w":
+                    case "west":
+                        console.log("you move west")
+                        player.pos.x -= 1
+                        break
+                    case "help":
+                        printHelp()
+                        break
+                    case "warp":
+                        // syntax: warp <nick|id>=<x,y
+                        var x, y, target, location
+                        input = input.split("=")
+                        target = input[0]
+                        // remap from alias if used and alias exists
+                        if (target in player.aliases) { target = player.aliases[target] }
+                        // get the location
+                        location = input[1].split(",")
+                        location = {x: parseInt(location[0]), y: parseInt(location[1])}
+                        console.log("warping %s to %s", target, location)
+                        // update target's location
+                        update(target + "/pos", JSON.stringify(location))
+                        break
+                    case "whereis":
+                        // syntax: whereis <id|alias>
+                        // get id if alias was used
+                        if (input in player.aliases) { input = player.aliases[input] }
+                        get(input + "/pos").then(function(pos) {
+                            if (pos) {
+                                console.log("%s is at %s", input, pos)
+                            } else {
+                                console.log("%s appears to be lost in the void..", input)
+                            }
+                            readCommand()
+                        })
+                        return
+                    case "alias":
+                        // syntax: alias <nick>=<id>
+                        [alias, friendId] = input.split("=")
+                        player.aliases[alias] = friendId
+                        console.log("%s is now known as %s", friendId, alias)
+                        break
+                    case "whoami":
+                        console.log("you are " + player.id)
+                        console.log("your position is currently %j", player.pos)
+                        break
+                    case "aliases":
+                        console.log("%j", player.aliases)
+                        break
+                    case "look":
+                        console.log("your position is currently %s", player.pos)
+                        get(player.pos + "/description").then(function(description) {
                             if (!description) {
                                 description = "you're surrounded by the rock walls you've known since birth"
                             }
                             console.log(description) 
-                            readCommand(player)
+                            readCommand()
                         })
-                    })
-                    return
-                case "describe":
-                    get(id).then(function(pos) {
-                        update(pos + "/description", input).then(function() {
+                        return
+                    case "describe":
+                        update(player.pos + "/description", input).then(function() {
                             console.log("your description will be remembered..")
-                            readCommand(player)
+                            readCommand()
                         })
-                    })
-                    return
-                case "quit":
-                case "exit":
-                    console.log("Closing...")
-                    sw.destroy()
-                    process.exit()
-                default:
-                    console.log("didn't recognize " + reply)
-            }
-            readCommand(player)
-            update(id + "/pos", JSON.stringify(player.pos))
+                        return
+                    case "quit":
+                    case "exit":
+                        console.log("Closing...")
+                        sw.destroy()
+                        process.exit()
+                    default:
+                        console.log("didn't recognize " + reply)
+                }
+                readCommand()
+                // save state data to db
+                saveState(player)
+            })
         })
     }
 
-    // fetch local player's position from hyperdb
-    get(id).then(function(position) {
-        position = JSON.parse(position)
-        if (!position) {
-            // new player, place them at the center
-            position = {x: 0, y: 0}
-            console.log("new player")
-        }
-
-        // fetch aliases
-        get(id + "/aliases").then(function(aliases) {
-            console.log(aliases)
-            if (!aliases) {
-                readCommand({pos: position, aliases: {}})
-            } else {
-                readCommand({pos: position, aliases: JSON.parse(aliases)})
-            }
-        })
-    })
+    // start reading input from the player
+    readCommand()
 })
 
 function update(key, val) {
