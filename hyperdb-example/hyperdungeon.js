@@ -57,22 +57,31 @@ db.ready(function () {
     })
 
     function getState(playerId) {
-        return new Promise(function(reject, resolve) {
-            get(id + "/pos", function(pos) {
-                if (!pos) { pos = JSON.stringify({x: 0, y: 0}) }
-                return JSON.parse(pos)
-            }).then(function(pos) {
-                return get(id + "/aliases", function(aliases) {
-                    if (!aliases) { aliases = JSON.stringify({}) }
-                     resolve({id: id, pos: pos, aliases: JSON.parse(aliases)})
+        console.log("get state")
+        console.log("playerId", playerId)
+        return new Promise(function(resolve, reject) {
+            console.log("get state promise")
+            var player = {id: playerId}
+            get(player.id + "/pos")
+                .then(function(pos) {
+                    if (!pos) { pos = JSON.stringify({x: 0, y: 0}) }
+                    console.log("got pos")
+                    player.pos = JSON.parse(pos)
+                    console.log(player.id)
+                    return get(player.id + "/aliases")
                 })
-            })
+                .then(function(aliases) {
+                    console.log("got aliases")
+                    if (!aliases) { aliases = JSON.stringify({}) }
+                    player.aliases = JSON.parse(aliases)
+                    resolve(player)
+                })
         })
     }
 
     // is this how promise chaining ought to be written? prod lykkin
     function saveState(player) {
-        return new Promise(function(reject, resolve) {
+        return new Promise(function(resolve, reject) {
             update(player.id + "/pos", player.pos)
             .then(function() {
                 return update(player.id + "/aliases", player.aliases)
@@ -95,6 +104,7 @@ db.ready(function () {
                 case "ambulate":
                     command = input
             }
+            console.log("ok")
 
             // get latest state information (useful in case of a warp by another player)
             getState(id)
@@ -189,11 +199,12 @@ db.ready(function () {
                     default:
                         console.log("didn't recognize " + reply)
                 }
+                return player
+            }).then(function() {
                 // save state data to db
-                saveState(player)
-                .then(function() {
-                    readCommand()
-                })
+                return saveState(player)
+            }).then(function() {
+                readCommand()
             })
         })
     }
