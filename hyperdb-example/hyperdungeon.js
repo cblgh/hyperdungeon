@@ -47,11 +47,12 @@ db.ready(function () {
     }
 
     sw.on("connection", function(peer, type) {
-        console.log("a new peer has joined, zarathystras's forces grow stronger (" + peer.key.toString("hex") + ")")
-        savePlayers(peer.key.toString("hex"), "connected")
+        var peerId = peer.key.toString("hex")
+        console.log("a new peer has joined, zarathystras's forces grow stronger (" + peerId + ")")
+        savePlayers(peerId, "connected")
         peer.on("close", function() {
-            console.log("a peer has left, zarathystras's forces grow weaker (" + peer.key.toString("hex") + ")")
-            savePlayers(peer.key.toString("hex"), "disconnected")
+            console.log("a peer has left, zarathystras's forces grow weaker (" + peerId + ")")
+            savePlayers(peerId, "disconnected")
         })
     })
 
