@@ -83,6 +83,7 @@ db.ready(function () {
     }
 
     var readCommand = function() {
+        console.log("OK READ COMMAND")
         rl.question("> ", function(reply) {
             var command, input
             [command, input] = split(reply)
@@ -188,9 +189,11 @@ db.ready(function () {
                     default:
                         console.log("didn't recognize " + reply)
                 }
-                readCommand()
                 // save state data to db
                 saveState(player)
+                .then(function() {
+                    readCommand()
+                })
             })
         })
     }
