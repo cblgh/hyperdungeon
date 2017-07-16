@@ -126,11 +126,26 @@ db.ready(function () {
                         if (recipient in player.aliases) { recipient = player.aliases[recipient] }
                         msg = input.join(" ")
                         console.log("to:", recipient, "msg:", msg)
+                        msg = {msg: msg, sender: player.id}
                         return append(recipient + "/messages", msg).then(function() {
                             console.log("write: finished the append business")
                             return player
                         })
                         break
+                    case "messages":
+                        return get(player.id + "/messages").then(function(msgs) {
+                            msgs.forEach(function(msg) { 
+                                var sender = msg.sender;
+                                // reverse lookup in our aliases for a nickname of the sender
+                                for (key in player.aliases) { 
+                                    if (player.aliases[key] === sender) {
+                                        sender = key
+                                        break
+                                    }
+                                }
+                                console.log(sender + ":", msg.msg) })
+                            return player
+                        })
                     case "warp":
                         // syntax: warp <nick|id>=<x,y
                         var x, y, target, location
