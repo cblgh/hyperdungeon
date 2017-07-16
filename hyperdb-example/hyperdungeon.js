@@ -16,7 +16,7 @@ var direction = process.argv[2] || "north"
 
 function printHelp() {
     console.log("directions: north, south, east, west")
-    console.log("commands: look, whereis <nick|id>, alias <nick>=<id>, describe <description>, exit")
+    console.log("commands: look, whereis <nick|id>, alias <nick>=<id>, describe <description>, exit, warp <id|nick>=x,y")
 }
 
 function savePlayers(playerId, state) {
@@ -56,26 +56,19 @@ db.ready(function () {
         })
     })
 
+    // test getState to see if Promise.all(...).then() returns the player object as a promise with resolve(player) would
     function getState(playerId) {
         console.log("get state")
         console.log("playerId", playerId)
-        return new Promise(function(resolve, reject) {
-            console.log("get state promise")
-            var player = {id: playerId}
-            get(player.id + "/pos")
-                .then(function(pos) {
-                    if (!pos) { pos = JSON.stringify({x: 0, y: 0}) }
-                    console.log("got pos")
-                    player.pos = JSON.parse(pos)
-                    console.log(player.id)
-                    return get(player.id + "/aliases")
-                })
-                .then(function(aliases) {
-                    console.log("got aliases")
-                    if (!aliases) { aliases = JSON.stringify({}) }
-                    player.aliases = JSON.parse(aliases)
-                    resolve(player)
-                })
+        var getPos = get(playerId + "/pos")
+        var getAlias = get(playerId + "/aliases")
+        return Promise.all([getPos, getAlias]).then(function(values) {
+            console.log("promise all!")
+            var pos = values[0] | JSON.stringify({x: 0, y: 0})
+            pos = JSON.parse(pos)
+            var aliases = values[1] | JSON.stringify({})
+            aliases = JSON.parse(aliases)
+            return {id: playerId, pos: pos, aliases: aliases}
         })
     }
 
@@ -226,8 +219,10 @@ function update(key, val) {
 }
 
 function get(key) {
+    console.log("1: GETTING KEY", key)
     return new Promise(function(resolve, reject) {
         db.get(key, function(err, nodes) {
+            console.log("GETTING KEY", key)
             if (err) { 
                 // not found
                 // console.log("err")
