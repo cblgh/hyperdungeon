@@ -128,6 +128,20 @@ db.ready(function () {
                     case "help":
                         printHelp()
                         break
+                    case "write":
+                        // syntax: write <alias|id> msg
+                        var recipient, msg
+                        input = input.split(" ")
+                        recipient = input.splice(0, 1)
+                        // remap if an alias used and it exists
+                        if (recipient in player.aliases) { recipient = player.aliases[recipient] }
+                        msg = input.join(" ")
+                        console.log("to:", recipient, "msg:", msg)
+                        append(recipient + "/messages", msg).then(function() {
+                            console.log("write: finished the append business")
+                            readCommand()
+                        })
+                        return
                     case "warp":
                         // syntax: warp <nick|id>=<x,y
                         var x, y, target, location
@@ -206,6 +220,20 @@ db.ready(function () {
     // start reading input from the player
     readCommand()
 })
+
+function append(key, val) {
+    console.log(append)
+    return get(key).then(function(arr) {
+        if (!arr) { arr = JSON.stringify([]) }
+        console.log("append.get")
+        arr = JSON.parse(arr) 
+        arr.push(val)
+        return arr
+    }).then(function(arr) {
+        console.log("append.update")
+        return update(key, JSON.stringify(arr))
+    })
+}
 
 function update(key, val) {
     return new Promise(function(resolve, reject) {
