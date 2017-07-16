@@ -12,13 +12,12 @@ var rl = readline.createInterface({
     output: process.stdout
 })
 
-var direction = process.argv[2] || "north"
-
 function printHelp() {
     console.log("directions: north, south, east, west")
     console.log("commands: look, whereis <nick|id>, alias <nick>=<id>, describe <description>, exit, warp <id|nick>=x,y")
 }
 
+// keep track of which player ids have entered the mud 
 function savePlayers(playerId, state) {
     get("players", function(players) {
         if (!players) { players = JSON.stringify({}) }
@@ -30,7 +29,7 @@ function savePlayers(playerId, state) {
 
 function split(input) {
     input = input.split(" ")
-    var command = input.splice(0, 1)[0] // splice out the command 
+    var command = input.splice(0, 1)[0] // splice out the first command part
     return [command, input.join(" ")] // and keep the rest of the string
 }
 
@@ -63,7 +62,7 @@ db.ready(function () {
         var getPos = get(playerId + "/pos")
         var getAlias = get(playerId + "/aliases")
         return Promise.all([getPos, getAlias]).then(function(values) {
-            console.log("promise all!")
+            console.log("inside promise all!")
             var pos = values[0] | JSON.stringify({x: 0, y: 0})
             pos = JSON.parse(pos)
             var aliases = values[1] | JSON.stringify({})
@@ -94,10 +93,12 @@ db.ready(function () {
             switch (command) {
                 case "go":
                 case "move":
+                case "walk":
+                case "tunnel":
+                case "crawl":
                 case "ambulate":
                     command = input
             }
-            console.log("ok")
 
             // get latest state information (useful in case of a warp by another player)
             getState(id)
@@ -132,7 +133,7 @@ db.ready(function () {
                         var x, y, target, location
                         input = input.split("=")
                         target = input[0]
-                        // remap from alias if used and alias exists
+                        // remap if an alias used and it exists
                         if (target in player.aliases) { target = player.aliases[target] }
                         // get the location
                         location = input[1].split(",")
@@ -224,9 +225,6 @@ function get(key) {
         db.get(key, function(err, nodes) {
             console.log("GETTING KEY", key)
             if (err) { 
-                // not found
-                // console.log("err")
-                // console.log(err) 
                 resolve(null)
             } else if (nodes && nodes[0]) {
                 resolve(nodes[0].value)
