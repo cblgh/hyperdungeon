@@ -20,10 +20,9 @@ function printHelp() {
 // keep track of which player ids have entered the mud 
 function savePlayers(playerId, state) {
     get("players", function(players) {
-        if (!players) { players = JSON.stringify({}) }
-        players = JSON.parse(players)
+        if (!players) { players = {} }
         players[playerId] = state
-        update("players", JSON.stringify(players))
+        update("players", players)
     })
 }
 
@@ -62,24 +61,10 @@ db.ready(function () {
         var getPos = get(playerId + "/pos")
         var getAlias = get(playerId + "/aliases")
         return Promise.all([getPos, getAlias]).then(function(values) {
-            console.log("inside promise all!")
-            var pos = values[0] | JSON.stringify({x: 0, y: 0})
-            pos = JSON.parse(pos)
-            var aliases = values[1] | JSON.stringify({})
-            aliases = JSON.parse(aliases)
+            console.log(values)
+            var pos = values[0] || {x: 0, y: 0}
+            var aliases = values[1] || {}
             return {id: playerId, pos: pos, aliases: aliases}
-        })
-    }
-
-    // is this how promise chaining ought to be written? prod lykkin
-    function saveState(player) {
-        return new Promise(function(resolve, reject) {
-            update(player.id + "/pos", player.pos)
-            .then(function() {
-                return update(player.id + "/aliases", player.aliases)
-            }).then(function() {
-                resolve()
-            })
         })
     }
 
@@ -109,21 +94,25 @@ db.ready(function () {
                     case "north": 
                         console.log("you move north")
                         player.pos.y += 1
+                        update(player.id + "/pos", player.pos)
                         break
                     case "s":
                     case "south":
                         console.log("you move south")
                         player.pos.y -= 1
+                        update(player.id + "/pos", player.pos)
                         break
                     case "e":
                     case "east":
                         console.log("you move east")
                         player.pos.x += 1
+                        update(player.id + "/pos", player.pos)
                         break
                     case "w":
                     case "west":
                         console.log("you move west")
                         player.pos.x -= 1
+                        update(player.id + "/pos", player.pos)
                         break
                     case "help":
                         printHelp()
@@ -137,11 +126,11 @@ db.ready(function () {
                         if (recipient in player.aliases) { recipient = player.aliases[recipient] }
                         msg = input.join(" ")
                         console.log("to:", recipient, "msg:", msg)
-                        append(recipient + "/messages", msg).then(function() {
+                        return append(recipient + "/messages", msg).then(function() {
                             console.log("write: finished the append business")
-                            readCommand()
+                            return player
                         })
-                        return
+                        break
                     case "warp":
                         // syntax: warp <nick|id>=<x,y
                         var x, y, target, location
@@ -152,29 +141,30 @@ db.ready(function () {
                         // get the location
                         location = input[1].split(",")
                         location = {x: parseInt(location[0]), y: parseInt(location[1])}
-                        console.log("warping %s to %s", target, location)
+                        console.log("warping %s to %j", target, location)
                         // update target's location
-                        update(target + "/pos", JSON.stringify(location))
+                        update(target + "/pos", location)
                         break
                     case "whereis":
                         // syntax: whereis <id|alias>
                         var target = input
                         // get id if alias was used
                         if (target in player.aliases) { target = player.aliases[target] }
-                        get(target + "/pos").then(function(pos) {
+                        return get(target + "/pos").then(function(pos) {
                             if (pos) {
-                                console.log("%s is at %s", target, pos)
+                                console.log("%s is at %j", target, pos)
                             } else {
                                 console.log("%s appears to be lost in the void..", target)
                             }
-                            readCommand()
+                            return player
                         })
-                        return
+                        break
                     case "alias":
                         // syntax: alias <nick>=<id>
                         [alias, friendId] = input.split("=")
                         player.aliases[alias] = friendId
                         console.log("%s is now known as %s", friendId, alias)
+                        update(player.id + "/aliases", player.aliases)
                         break
                     case "whoami":
                         console.log("you are " + player.id)
@@ -184,21 +174,25 @@ db.ready(function () {
                         console.log("%j", player.aliases)
                         break
                     case "look":
-                        console.log("your position is currently %s", player.pos)
-                        get(player.pos + "/description").then(function(description) {
+                        console.log("your position is currently %j", player.pos)
+                        return get(player.pos.x + "," + player.pos.y + "/description").then(function(description) {
                             if (!description) {
                                 description = "you're surrounded by the rock walls you've known since birth"
                             }
                             console.log(description) 
-                            readCommand()
+                            return player
                         })
-                        return
+                        break
                     case "describe":
-                        update(player.pos + "/description", input).then(function() {
+                        return update(player.pos.x + "," + player.pos.y + "/description", input).then(function() {
                             console.log("your description will be remembered..")
-                            readCommand()
+                        }).then(function() {
+                            return get(player.pos.x + "," + player.pos.y + "/description")
+                        }).then(function(descr) {
+                            console.log("actually it was", descr)
+                            return player
                         })
-                        return
+                        break
                     case "quit":
                     case "exit":
                         console.log("Closing...")
@@ -208,9 +202,6 @@ db.ready(function () {
                         console.log("didn't recognize " + reply)
                 }
                 return player
-            }).then(function() {
-                // save state data to db
-                return saveState(player)
             }).then(function() {
                 readCommand()
             })
@@ -224,14 +215,13 @@ db.ready(function () {
 function append(key, val) {
     console.log(append)
     return get(key).then(function(arr) {
-        if (!arr) { arr = JSON.stringify([]) }
+        if (!arr) { arr = [] }
         console.log("append.get")
-        arr = JSON.parse(arr) 
         arr.push(val)
         return arr
     }).then(function(arr) {
         console.log("append.update")
-        return update(key, JSON.stringify(arr))
+        return update(key, arr)
     })
 }
 
@@ -248,10 +238,10 @@ function update(key, val) {
 }
 
 function get(key) {
-    console.log("1: GETTING KEY", key)
+    // console.log("1: GETTING KEY", key)
     return new Promise(function(resolve, reject) {
         db.get(key, function(err, nodes) {
-            console.log("GETTING KEY", key)
+            // console.log("GETTING KEY", key)
             if (err) { 
                 resolve(null)
             } else if (nodes && nodes[0]) {
