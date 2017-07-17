@@ -32,8 +32,6 @@ function split(input) {
     return [command, input.join(" ")] // and keep the rest of the string
 }
 
-// i don't need to JSON.parse, JSON.stringify all the time do i?
-// check out valueEncoding of hyperdb / ask mafintosh about it / check out his code for hyperdictionary
 db.ready(function () {
     var id = local.key.toString("hex")
     console.log("local key", id)
@@ -54,7 +52,6 @@ db.ready(function () {
         })
     })
 
-    // test getState to see if Promise.all(...).then() returns the player object as a promise with resolve(player) would
     function getState(playerId) {
         // console.log("get state")
         // console.log("playerId", playerId)
