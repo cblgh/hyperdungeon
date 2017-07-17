@@ -68,14 +68,14 @@ db.ready(function () {
         })
     }
 
-    function monitorMessages() {
+    function monitorMessages(channel) {
         var lastIndex = -1
-        get(id + "/messages").then(function(msgs) {
+        get(channel + "/messages").then(function(msgs) {
             msgs = msgs || []
             lastIndex = msgs.length - 1
             setInterval(function() {
-                var getMessages = get(id + "/messages")
-                var getAliases = get(id + "/aliases")
+                var getMessages = get(channel + "/messages")
+                var getAliases = get(channel+ "/aliases")
                 Promise.all([getMessages, getAliases]).then(function(values) {
                     var msgs, aliases
                     msgs = values[0] || []
@@ -104,7 +104,10 @@ db.ready(function () {
         })
     }
 
-    monitorMessages()
+    // monitor our own messages
+    monitorMessages(id)
+    // monitor global messages
+    monitorMessages("global")
 
     var cursor = "> "
     var readCommand = function() {
@@ -168,7 +171,7 @@ db.ready(function () {
                         })
                         break
                     case "write":
-                        // syntax: write <alias|id> msg
+                        // syntax: write <alias|id|global> msg
                         var recipient, msg
                         input = input.split(" ")
                         recipient = input.splice(0, 1)
