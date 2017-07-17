@@ -71,6 +71,7 @@ db.ready(function () {
     function monitorMessages() {
         var lastIndex = -1
         get(id + "/messages").then(function(msgs) {
+            msgs = msgs || []
             lastIndex = msgs.length - 1
             setInterval(function() {
                 var getMessages = get(id + "/messages")
@@ -78,7 +79,6 @@ db.ready(function () {
                 Promise.all([getMessages, getAliases]).then(function(values) {
                     var msgs, aliases
                     msgs = values[0] || []
-                    console.log(msgs)
                     aliases = values[1] || {}
                     // if we have a new message
                     if (msgs.length > lastIndex) {
