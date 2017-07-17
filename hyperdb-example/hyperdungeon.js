@@ -75,7 +75,7 @@ db.ready(function () {
             lastIndex = msgs.length - 1
             setInterval(function() {
                 var getMessages = get(channel + "/messages")
-                var getAliases = get(channel+ "/aliases")
+                var getAliases = get(id + "/aliases") // aliases belong to this user, thus id is used and not channel
                 Promise.all([getMessages, getAliases]).then(function(values) {
                     var msgs, aliases
                     msgs = values[0] || []
