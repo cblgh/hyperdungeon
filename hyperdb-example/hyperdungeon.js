@@ -265,14 +265,11 @@ db.ready(function () {
 })
 
 function append(key, val) {
-    console.log(append)
     return get(key).then(function(arr) {
         if (!arr) { arr = [] }
-        console.log("append.get")
         arr.push(val)
         return arr
     }).then(function(arr) {
-        console.log("append.update")
         return update(key, arr)
     })
 }
