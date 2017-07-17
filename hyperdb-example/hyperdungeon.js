@@ -77,8 +77,8 @@ db.ready(function () {
                 var getAliases = get(id + "/aliases")
                 Promise.all([getMessages, getAliases]).then(function(values) {
                     var msgs, aliases
-                    msgs = values[0]
-                    aliases = values[1]
+                    msgs = values[0] || []
+                    aliases = values[1] || {}
                     // if we have a new message
                     if (msgs.length > lastIndex) {
                         // go through each new message
@@ -165,7 +165,6 @@ db.ready(function () {
                         console.log("to:", recipient, "msg:", msg)
                         msg = {msg: msg, sender: player.id}
                         return append(recipient + "/messages", msg).then(function() {
-                            console.log("write: finished the append business")
                             return player
                         })
                         break
