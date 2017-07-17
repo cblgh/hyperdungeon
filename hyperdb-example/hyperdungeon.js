@@ -78,6 +78,7 @@ db.ready(function () {
                 Promise.all([getMessages, getAliases]).then(function(values) {
                     var msgs, aliases
                     msgs = values[0] || []
+                    console.log(msgs)
                     aliases = values[1] || {}
                     // if we have a new message
                     if (msgs.length > lastIndex) {
