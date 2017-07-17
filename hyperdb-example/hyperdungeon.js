@@ -106,9 +106,10 @@ db.ready(function () {
 
     monitorMessages()
 
+    var cursor = "> "
     var readCommand = function() {
         console.log("OK READ COMMAND")
-        rl.question("> ", function(reply) {
+        rl.question(cursor, function(reply) {
             var command, input
             [command, input] = split(reply)
             
@@ -126,6 +127,7 @@ db.ready(function () {
             // get latest state information (useful in case of a warp by another player)
             getState(id)
             .then(function(player) {
+                cursor = "(" + player.pos.x + ", " + player.pos.y + ")> "
                 // handle commands
                 switch (command) {
                     case "n":
@@ -261,7 +263,10 @@ db.ready(function () {
     }
 
     // start reading input from the player
-    readCommand()
+    get(id + "/pos").then(function(pos) {
+        cursor = "(" + pos.x + ", " + pos.y +  ")> "
+        readCommand()
+    })
 })
 
 function append(key, val) {
