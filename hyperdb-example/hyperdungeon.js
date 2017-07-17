@@ -155,6 +155,18 @@ db.ready(function () {
                     case "help":
                         printHelp()
                         break
+                    case "reply":
+                        // syntax: reply <msg>
+                        // reply to the latest received correspondent
+                        get(player.id + "/messages").then(function(msgs) {
+                            return msgs[msgs.length - 1]
+                        }).then(function(last) {
+                            var msg = {sender: player.id, msg: input}
+                            return append(last.sender + "/messages", msg)
+                        }).then(function() {
+                            return player
+                        })
+                        break
                     case "write":
                         // syntax: write <alias|id> msg
                         var recipient, msg
