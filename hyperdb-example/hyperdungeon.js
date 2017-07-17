@@ -68,6 +68,43 @@ db.ready(function () {
         })
     }
 
+    function monitorMessages() {
+        var lastIndex = -1
+        get(id + "/messages").then(function(msgs) {
+            lastIndex = msgs.length - 1
+            setInterval(function() {
+                var getMessages = get(id + "/messages")
+                var getAliases = get(id + "/aliases")
+                Promise.all([getMessages, getAliases]).then(function(values) {
+                    var msgs, aliases
+                    msgs = values[0]
+                    aliases = values[1]
+                    // if we have a new message
+                    if (msgs.length > lastIndex) {
+                        // go through each new message
+                        for (var i = lastIndex + 1; i < msgs.length; i++) {
+                            // getting its contents & sender
+                            var msg = msgs[i]
+                            var sender = msg.sender;
+                            // reverse lookup in our aliases for a nickname of the sender
+                            for (key in aliases) { 
+                                if (aliases[key] === sender) {
+                                    sender = key
+                                    break
+                                }
+                            }
+                            // and printing it out
+                            console.log(sender + ":", msg.msg)
+                        }
+                        lastIndex = msgs.length - 1;
+                    }
+                })
+            }, 1000)
+        })
+    }
+
+    monitorMessages()
+
     var readCommand = function() {
         console.log("OK READ COMMAND")
         rl.question("> ", function(reply) {
