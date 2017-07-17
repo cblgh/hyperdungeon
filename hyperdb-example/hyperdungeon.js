@@ -56,12 +56,12 @@ db.ready(function () {
 
     // test getState to see if Promise.all(...).then() returns the player object as a promise with resolve(player) would
     function getState(playerId) {
-        console.log("get state")
-        console.log("playerId", playerId)
+        // console.log("get state")
+        // console.log("playerId", playerId)
         var getPos = get(playerId + "/pos")
         var getAlias = get(playerId + "/aliases")
         return Promise.all([getPos, getAlias]).then(function(values) {
-            console.log(values)
+            // console.log(values)
             var pos = values[0] || {x: 0, y: 0}
             var aliases = values[1] || {}
             return {id: playerId, pos: pos, aliases: aliases}
@@ -108,7 +108,6 @@ db.ready(function () {
 
     var cursor = "> "
     var readCommand = function() {
-        console.log("OK READ COMMAND")
         rl.question(cursor, function(reply) {
             var command, input
             [command, input] = split(reply)
@@ -127,7 +126,6 @@ db.ready(function () {
             // get latest state information (useful in case of a warp by another player)
             getState(id)
             .then(function(player) {
-                cursor = "(" + player.pos.x + ", " + player.pos.y + ")> "
                 // handle commands
                 switch (command) {
                     case "n":
@@ -256,7 +254,8 @@ db.ready(function () {
                         console.log("didn't recognize " + reply)
                 }
                 return player
-            }).then(function() {
+            }).then(function(player) {
+                cursor = "(" + player.pos.x + ", " + player.pos.y + ")> "
                 readCommand()
             })
         })
@@ -264,6 +263,7 @@ db.ready(function () {
 
     // start reading input from the player
     get(id + "/pos").then(function(pos) {
+        pos = pos || {x: 0, y: 0}
         cursor = "(" + pos.x + ", " + pos.y +  ")> "
         readCommand()
     })
