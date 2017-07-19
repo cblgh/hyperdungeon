@@ -1,7 +1,8 @@
 {
-    "name": "hyperdictionary",
+    "name": "hyperdungeon",
     "version": "0.0.0",
-    "main": "hyperdictionary.js",
+    "main": "hyperdungeon.js",
+    "scripts": {"start": "node hyperdungeon.js"},
     "dependencies": {
         "hypercore": "^6.3.8",
         "hyperdb": "github:mafintosh/hyperdb",
