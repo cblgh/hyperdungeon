@@ -231,15 +231,17 @@ db.ready(function () {
                         update(player.id + "/aliases", player.aliases)
                         break
                     case "whoami":
+                        var pos = player.pos.x + "," + player.pos.y
                         console.log("you are " + player.id)
-                        console.log("your position is currently %j", player.pos)
+                        console.log("your position is currently %s", pos)
                         break
                     case "aliases":
                         console.log("%j", player.aliases)
                         break
                     case "look":
-                        console.log("your position is currently %j", player.pos)
-                        return get(player.pos.x + "," + player.pos.y + "/description").then(function(description) {
+                        var pos = player.pos.x + "," + player.pos.y 
+                        console.log("your position is currently %s", pos)
+                        return get(pos + "/description").then(function(description) {
                             if (!description) {
                                 description = "you're surrounded by the rock walls you've known since birth"
                             }
@@ -248,12 +250,9 @@ db.ready(function () {
                         })
                         break
                     case "describe":
-                        return update(player.pos.x + "," + player.pos.y + "/description", input).then(function() {
+                        var pos = player.pos.x + "," + player.pos.y 
+                        return update(pos + "/description", input).then(function() {
                             console.log("your description will be remembered..")
-                        }).then(function() {
-                            return get(player.pos.x + "," + player.pos.y + "/description")
-                        }).then(function(descr) {
-                            console.log("actually it was", descr)
                             return player
                         })
                         break
