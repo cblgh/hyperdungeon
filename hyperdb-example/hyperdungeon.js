@@ -1,5 +1,4 @@
 var hyperdb = require("hyperdb")
-var hypercore = require("hypercore")
 var hyperdiscovery = require("hyperdiscovery")
 var readline = require("readline")
 var config = require("./config.js")
@@ -83,9 +82,9 @@ db.ready(function () {
                         for (var i = lastIndex + 1; i < msgs.length; i++) {
                             // getting its contents & sender
                             var msg = msgs[i]
-                            var sender = msg.sender;
+                            var sender = msg.sender
                             // reverse lookup in our aliases for a nickname of the sender
-                            for (key in aliases) { 
+                            for (var key in aliases) { 
                                 if (aliases[key] === sender) {
                                     sender = key
                                     break
@@ -94,7 +93,7 @@ db.ready(function () {
                             // and printing it out
                             console.log(sender + ":", msg.msg)
                         }
-                        lastIndex = msgs.length - 1;
+                        lastIndex = msgs.length - 1
                     }
                 })
             }, 1000)
@@ -158,7 +157,7 @@ db.ready(function () {
                     case "reply":
                         // syntax: reply <msg>
                         // reply to the latest received correspondent
-                        get(player.id + "/messages").then(function(msgs) {
+                        return get(player.id + "/messages").then(function(msgs) {
                             return msgs[msgs.length - 1]
                         }).then(function(last) {
                             var msg = {sender: player.id, msg: input}
@@ -166,7 +165,6 @@ db.ready(function () {
                         }).then(function() {
                             return player
                         })
-                        break
                     case "write":
                         // syntax: write <alias|id|global> msg
                         var recipient, msg
@@ -180,13 +178,12 @@ db.ready(function () {
                         return append(recipient + "/messages", msg).then(function() {
                             return player
                         })
-                        break
                     case "messages":
                         return get(player.id + "/messages").then(function(msgs) {
                             msgs.forEach(function(msg) { 
-                                var sender = msg.sender;
+                                var sender = msg.sender
                                 // reverse lookup in our aliases for a nickname of the sender
-                                for (key in player.aliases) { 
+                                for (var key in player.aliases) { 
                                     if (player.aliases[key] === sender) {
                                         sender = key
                                         break
@@ -197,7 +194,7 @@ db.ready(function () {
                         })
                     case "warp":
                         // syntax: warp <nick|id>=<x,y
-                        var x, y, target, location
+                        var target, location
                         input = input.split("=")
                         target = input[0]
                         // remap if an alias used and it exists
@@ -222,9 +219,9 @@ db.ready(function () {
                             }
                             return player
                         })
-                        break
                     case "alias":
                         // syntax: alias <nick>=<id>
+                        var alias, friendId
                         [alias, friendId] = input.split("=")
                         player.aliases[alias] = friendId
                         console.log("%s is now known as %s", friendId, alias)
@@ -248,19 +245,18 @@ db.ready(function () {
                             console.log(description) 
                             return player
                         })
-                        break
                     case "describe":
                         var pos = player.pos.x + "," + player.pos.y 
                         return update(pos + "/description", input).then(function() {
                             console.log("your description will be remembered..")
                             return player
                         })
-                        break
                     case "quit":
                     case "exit":
                         console.log("Closing...")
                         sw.destroy()
                         process.exit()
+                        break
                     default:
                         console.log("didn't recognize " + reply)
                 }
@@ -292,7 +288,7 @@ function append(key, val) {
 
 function update(key, val) {
     return new Promise(function(resolve, reject) {
-        db.put(key, val, function(err, nodes) {
+        db.put(key, val, function(err) {
             if (err) {
                 console.log(err)
                 reject(err)
