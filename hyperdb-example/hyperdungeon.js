@@ -266,7 +266,7 @@ db.ready(function () {
                 }
                 return player
             }).then(function(player) {
-                cursor = "(" + player.pos.x + ", " + player.pos.y + ")> "
+                cursor = player.pos.x + "," + player.pos.y + " > "
                 readCommand()
             })
         })
@@ -275,7 +275,7 @@ db.ready(function () {
     // start reading input from the player
     get(id + "/pos").then(function(pos) {
         pos = pos || {x: 0, y: 0}
-        cursor = "(" + pos.x + ", " + pos.y +  ")> "
+        cursor = pos.x + "," + pos.y + " > "
         readCommand()
     })
 })
