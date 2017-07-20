@@ -1,15 +1,17 @@
 {
-    "name": "hyperdungeon",
-    "version": "0.0.0",
-    "main": "hyperdungeon.js",
-    "scripts": {"start": "node hyperdungeon.js"},
-    "dependencies": {
-        "hypercore": "^6.3.8",
-        "hyperdb": "github:mafintosh/hyperdb",
-        "hyperdiscovery": "^6.0.4",
-        "random-access-file": "^1.7.3",
-        "random-access-memory": "^2.4.0",
-        "random-access-page-files": "^1.0.1"
-    }
+  "name": "hyperdungeon",
+  "version": "0.0.0",
+  "main": "hyperdungeon.js",
+  "scripts": {
+    "start": "node hyperdungeon.js"
+  },
+  "dependencies": {
+    "hypercore": "^6.3.8",
+    "hyperdb": "github:mafintosh/hyperdb",
+    "hyperdiscovery": "^6.0.4",
+    "peer-network": "^2.0.2",
+    "random-access-file": "^1.7.3",
+    "random-access-memory": "^2.4.0",
+    "random-access-page-files": "^1.0.1"
+  }
 }
-

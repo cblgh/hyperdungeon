@@ -2,6 +2,10 @@ var hyperdb = require("hyperdb")
 var hyperdiscovery = require("hyperdiscovery")
 var readline = require("readline")
 var config = require("./config.js")
+// use peer-network to connect new peers to the distributed mud instance
+var peernet  = require("peer-network")
+var network = peernet()
+var server = network.createServer()
 
 var local = config.local
 var db = hyperdb(config.feeds)
@@ -10,6 +14,9 @@ var rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 })
+
+// META TODO: somehow allow people to just get this entire codebase as a dat itself
+
 
 function printHelp() {
     console.log("directions: north, south, east, west")
@@ -31,9 +38,31 @@ function split(input) {
     return [command, input.join(" ")] // and keep the rest of the string
 }
 
+// pokemon inspired theme / collecting bunch of random monster at random spots on map, calculating the hash of the
+// position to generate them
+
 db.ready(function () {
     var id = local.key.toString("hex")
     console.log("local key", id)
+
+    // to connect hyperdungeon peers initially we first
+    // try to announce to network
+    var stream = network.connect("hyperdungeon")
+
+    stream.write("hello i am " + id.toString("hex"))
+    stream.on("data", function (data) {
+        console.log("data:", data.toString())
+    })
+
+    // if that fails then we're the only alive peer, so we create a server and listen on it so that
+    // others have somewhere to connect to
+    stream.on("error", function (data) {
+        server.on("connection", function (stream) {
+            console.log("new connection")
+            stream.pipe(stream) // echo
+        })
+        server.listen("hyperdungeon") // listen on a name
+    })
 
     var sw = hyperdiscovery(db, {live: true})
     if (process.argv.indexOf("--sync") > -1) {
@@ -313,5 +342,6 @@ function get(key) {
         })
     })
 }
+
 
 function noop () {}
