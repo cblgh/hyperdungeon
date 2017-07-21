@@ -1,4 +1,5 @@
 var hyperdb = require("hyperdb")
+var Readable = require("stream").Readable
 var hyperdiscovery = require("hyperdiscovery")
 var readline = require("readline")
 var config = require("./config.js")
@@ -38,13 +39,21 @@ function split(input) {
     return [command, input.join(" ")] // and keep the rest of the string
 }
 
-// pokemon inspired theme / collecting bunch of random monster at random spots on map, calculating the hash of the
+// IDEA: pokemon inspired theme / collecting bunch of random monster at random spots on map, calculating the hash of the
 // position to generate them
 
 db.ready(function () {
     var id = local.key.toString("hex")
     console.log("local key", id)
 
+    // PEERNET IDEA:
+    // before anything else, we try to connect to the peernet hyperdungeon server
+    // if that fails, we create an instance ourselves.
+    // then we add ourselves to a list as the first hyperdb feed
+    //
+    // when someone connects, we receive their id, add them to the end of the feed list and then pass them the entire list
+    // they then use that list to propagate hyperdb correspondingly
+    //
     // to connect hyperdungeon peers initially we first
     // try to announce to network
     var stream = network.connect("hyperdungeon")
@@ -59,7 +68,13 @@ db.ready(function () {
     stream.on("error", function (data) {
         server.on("connection", function (stream) {
             console.log("new connection")
-            stream.pipe(stream) // echo
+            var readStream = new Readable()
+            readStream.push("greeting stranger! i am " + id)
+            readStream.push(null) // signals end of the read stream
+            readStream.pipe(stream) // reply
+            stream.on("data", function (data) {
+                console.log("received:", data.toString())
+            })
         })
         server.listen("hyperdungeon") // listen on a name
     })
