@@ -36,11 +36,13 @@ function connect(name) {
 }
 
 var feeds = []
-function start(name) {
+function start(name, key) {
     return new Promise(function(resolve, reject) {
         fs.readFile("./feeds.json", function(err, data) {
             if (!err) {
                 feeds = JSON.parse(data)
+            } else {
+                feeds.push(key) // add the first key i.e. our key to feeds
             }
             resolve(feeds)
             connect(name)
