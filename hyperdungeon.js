@@ -88,6 +88,15 @@ function hyperdungeon() {
         })
     }
 
+    function updatePos(player, oldPos) {
+        var newPos =  player.pos.x + "," + player.pos.y
+        // update tile
+        // move player
+        update(player.id + "/pos", player.pos)
+        // update old & new tile arrays
+        moveItem(oldPos + "/players", newPos + "/players", player.id)
+    }
+
     function monitorMessages(channel) {
         var lastIndex = -1
         get(channel + "/messages").then(function(msgs) {
@@ -150,31 +159,32 @@ function hyperdungeon() {
             // get latest state information (useful in case of a warp by another player)
             getState(id)
             .then(function(player) {
+                var oldPos = player.pos.x + "," + player.pos.y
                 // handle commands
                 switch (command) {
                     case "n":
                     case "north": 
                         console.log("you move north")
                         player.pos.y += 1
-                        update(player.id + "/pos", player.pos)
+                        updatePos(player, oldPos)
                         break
                     case "s":
                     case "south":
                         console.log("you move south")
                         player.pos.y -= 1
-                        update(player.id + "/pos", player.pos)
+                        updatePos(player, oldPos)
                         break
                     case "e":
                     case "east":
                         console.log("you move east")
                         player.pos.x += 1
-                        update(player.id + "/pos", player.pos)
+                        updatePos(player, oldPos)
                         break
                     case "w":
                     case "west":
                         console.log("you move west")
                         player.pos.x -= 1
-                        update(player.id + "/pos", player.pos)
+                        updatePos(player, oldPos)
                         break
                     case "help":
                         printHelp()
@@ -229,8 +239,12 @@ function hyperdungeon() {
                         location = input[1].split(",")
                         location = {x: parseInt(location[0]), y: parseInt(location[1])}
                         console.log("warping %s to %j", target, location)
-                        // update target's location
-                        update(target + "/pos", location)
+                        // get target's old location
+                        get(target + "/pos").then(function(old) {
+                            // update target's location
+                            updatePos({id: target, pos: location}, old)
+                            // update(target + "/pos", location)
+                        })
                         break
                     case "whereis":
                         // syntax: whereis <id|alias>
@@ -302,6 +316,25 @@ function hyperdungeon() {
     })
 }
 
+
+// moves a value from one array to another
+function moveItem(oldKey, newKey, value) {
+    get(oldKey).then(function(arr) {
+        // remove from old array
+        arr = arr || []
+        arr.splice(arr.indexOf(value), 1)
+        return update(oldKey, arr)
+    }).then(function() {
+        return get(newKey)
+    }).then(function(arr) {
+        // add to new array
+        arr = arr || []
+        arr.push(value)
+        return update(newKey, arr)
+    })
+}
+
+// appends to an array
 function append(key, val) {
     return get(key).then(function(arr) {
         if (!arr) { arr = [] }
