@@ -205,6 +205,7 @@ function hyperdungeon() {
                         })
                     case "messages":
                         return get(player.id + "/messages").then(function(msgs) {
+                            msgs = msgs || []
                             msgs.forEach(function(msg) { 
                                 var sender = msg.sender
                                 // reverse lookup in our aliases for a nickname of the sender
