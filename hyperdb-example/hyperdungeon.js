@@ -18,20 +18,9 @@ var rl = readline.createInterface({
 
 // META TODO: somehow allow people to just get this entire codebase as a dat itself
 
-
 function printHelp() {
     console.log("directions: north, south, east, west")
     console.log("commands: look, whereis <nick|id>, alias <nick>=<id>, describe <description>, exit, warp <id|nick>=x,y")
-}
-
-// keep track of which player ids have entered the mud 
-// currently unused
-function savePlayers(playerId, state) {
-    get("players", function(players) {
-        if (!players) { players = {} }
-        players[playerId] = state
-        update("players", players)
-    })
 }
 
 function split(input) {
@@ -40,9 +29,8 @@ function split(input) {
     return [command, input.join(" ")] // and keep the rest of the string
 }
 
-// PEERNET IDEA:
-// before anything else, we try to connect to the peernet hyperdungeon server.
-// if that fails, we create an instance ourselves. 
+// before we do anything else, we try to connect to the peernet hyperdungeon server.
+// if that fails, we create an instance ourselves
 local.ready(function() {
     // try to connect to an existing server
     var stream = network.connect("hyperdungeon")
@@ -83,10 +71,8 @@ function hyperdungeon() {
     sw.on("connection", function(peer, type) {
         var peerId = peer.key.toString("hex")
         console.log("a new peer has joined, zarathystras's forces grow stronger")
-        // savePlayers(peerId, "connected")
         peer.on("close", function() {
             console.log("a peer has left, zarathystras's forces grow weaker")
-            // savePlayers(peerId, "disconnected")
         })
     })
 
@@ -106,6 +92,7 @@ function hyperdungeon() {
         get(channel + "/messages").then(function(msgs) {
             msgs = msgs || []
             lastIndex = msgs.length - 1
+            // check for new messages every second
             setInterval(function() {
                 var getMessages = get(channel + "/messages")
                 var getAliases = get(id + "/aliases") // aliases belongs to this user, thus id is used and not channel
@@ -137,7 +124,7 @@ function hyperdungeon() {
         })
     }
 
-    // monitor our own messages
+    // monitor messages adress to ourself
     monitorMessages(id)
     // monitor global messages
     monitorMessages("global")
@@ -350,6 +337,5 @@ function get(key) {
         })
     })
 }
-
 
 function noop () {}
