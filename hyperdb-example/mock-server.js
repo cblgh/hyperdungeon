@@ -35,9 +35,6 @@ function connect(name) {
     // if that fails then we're the only alive peer, so we create a server and listen on it so that
     // others have somewhere to connect to
 }
-var feeds =  [
-    "5c73d8199d83875b62b19b28893b374189e439e760dc070497cfbd643bfb8fbe",  // wintermute
-     "7cfc122d7ce9e73d8324f49cb0ab4cd4a92e708e87757102b06d0ed757f7d4aa" // clone client 
-]
+var feeds =  []
 module.exports.feeds = feeds
 connect("hyperdungeon")

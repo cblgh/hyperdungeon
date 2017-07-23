@@ -2,12 +2,12 @@ var hyperdb = require("hyperdb")
 var Readable = require("stream").Readable
 var hyperdiscovery = require("hyperdiscovery")
 var readline = require("readline")
-var config = require("./config.js")
+var util = require("./util.js")
 // use peer-network to connect new peers to the distributed mud instance
 var peernet  = require("peer-network")
 var network = peernet()
 var server = network.createServer()
-var local = config.local
+var local = util.local
 var db 
 
 var rl = readline.createInterface({
@@ -57,7 +57,7 @@ local.ready(function() {
     // (including our key)
     stream.on("data", function (data) { 
         var reply = JSON.parse(data.toString())
-        var feeds = config.join(reply, local.key.toString("hex"))
+        var feeds = util.join(reply, local.key.toString("hex"))
         db = hyperdb(feeds)
         db.ready(hyperdungeon)
     })
