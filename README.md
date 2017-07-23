@@ -4,7 +4,7 @@ a distributed mud experiment ontop of dat and browserify
 
 ## Tutorial
 #### `npm install && npm start`
-Install all the packages needed and run the game. Currently you'll need at least another peer to be running to be able to do anything.
+Install all the packages needed and run the game. Currently you'll need at least another peer running to be able to do anything.
 
 ### Commands
 #### `north|west|south|east`
