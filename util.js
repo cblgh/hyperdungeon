@@ -1,6 +1,5 @@
 var hypercore = require("hypercore")
 var ram = require("random-access-memory")
-var pages = require("random-access-page-files")
 var st = process.argv.indexOf("--storage") > -1 ? storage : ram
 var local = hypercore("./dungeon-dir", {valueEncoding: "json", sparse: true})
 
@@ -28,6 +27,5 @@ function join(arr, key) {
 }
 
 function storage (name) {
-    if (name === "data") return pages("dungeon.map/data")
     return raf("dungeon.map/" + name)
 }
