@@ -5,7 +5,10 @@ _[wip wip wip]_
 
 ## Tutorial
 #### `npm install && npm start`
-Install all the packages needed and run the game. Currently you'll need at least another peer running to be able to do anything.
+The above installs all the packages needed and runs the game. Currently you'll need at least another peer (that is, a hyperdungeon session/player) running to be able to do anything.
+
+When you start your id will be printed out as (but with your id instead!)  
+`local key 94dc2d7a9801034e1159525c1bf29a893a5fdf7a4e998d65e17f44ed86868dd9`
 
 ### Commands
 #### `[n]orth|[w]est|[s]outh|[e]ast`
@@ -22,5 +25,8 @@ describe you stand in the middle of a dark hallway. you hear whirring machines i
 #### `whereis <id|alias>`
 `whereis cblgh`
 
+#### `reply <msg>`  
+replies to the person who most recently wrote to you
+
 ### Other Commands
-##### `exit|look|aliases|messages|help`
+##### `whoami|look|aliases|messages|help|exit`
