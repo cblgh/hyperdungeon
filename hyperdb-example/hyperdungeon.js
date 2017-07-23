@@ -32,14 +32,15 @@ function split(input) {
 // before we do anything else, we try to connect to the peernet hyperdungeon server.
 // if that fails, we create an instance ourselves
 local.ready(function() {
+    var localKey = local.key.toString("hex") 
     // try to connect to an existing server
     var stream = network.connect("hyperdungeon")
-    stream.write(local.key.toString("hex")) // tell server our id
+    stream.write(localKey) // tell server our id
     
     // if that fails, start a server
     stream.on("error", function() {
         console.log("no such server found")
-        mock("hyperdungeon").then(function(feeds) {
+        mock("hyperdungeon", localKey).then(function(feeds) {
             start(feeds)
         })
     })
