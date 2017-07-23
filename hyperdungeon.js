@@ -198,7 +198,7 @@ function hyperdungeon() {
                         // remap if an alias used and it exists
                         if (recipient in player.aliases) { recipient = player.aliases[recipient] }
                         msg = input.join(" ")
-                        console.log("to:", recipient, "msg:", msg)
+                        // console.log("to:", recipient, "msg:", msg)
                         msg = {msg: msg, sender: player.id}
                         return append(recipient + "/messages", msg).then(function() {
                             return player
