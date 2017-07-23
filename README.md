@@ -1,6 +1,7 @@
 # hyperdungeon
 a distributed mud experiment ontop of dat and browserify
 
+_[wip wip wip]_
 
 ## Tutorial
 #### `npm install && npm start`
