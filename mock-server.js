@@ -50,3 +50,4 @@ function start(name, key) {
     })
 }
 module.exports = start
+module.exports.connect = connect
