@@ -90,7 +90,6 @@ function hyperdungeon() {
 
     function updatePos(player, oldPos) {
         var newPos =  player.pos.x + "," + player.pos.y
-        // update tile
         // move player
         update(player.id + "/pos", player.pos)
         // update old & new tile arrays
@@ -283,6 +282,15 @@ function hyperdungeon() {
                                 description = "you're surrounded by the rock walls you've known since birth"
                             }
                             console.log(description) 
+                            return get(pos + "/players")
+                        }).then(function(players) {
+                            if (players) {
+                                console.log("you see %d other%s", players.length, players.length > 1 ? "s" : "")
+                                players.forEach(function(p) {
+                                    if (p in player.aliases) { p = player.aliases[p] }
+                                    console.log(p)
+                                })
+                            }
                             return player
                         })
                     case "describe":
