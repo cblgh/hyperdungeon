@@ -2,6 +2,7 @@ var peernet = require("peer-network")
 var network = peernet()
 var server = network.createServer()
 var Readable = require("stream").Readable
+var fs = require("fs")
 
 function connect(name) {
     console.log("starting server at " + name + "..")
@@ -19,6 +20,10 @@ function connect(name) {
             var peerKey = data.toString()
             if (feeds.indexOf(peerKey) < 0) { // new peer connected, add them to our feeds
                 feeds.push(peerKey)
+                console.log(feeds)
+                fs.writeFile("./feeds.json", JSON.stringify(feeds), function(err) {
+                    if (err) { console.log(err) }
+                })
             }
             var readStream = new Readable()
             readStream.push(JSON.stringify(feeds))
@@ -26,15 +31,12 @@ function connect(name) {
             readStream.pipe(stream) // reply
         })
     })
-    // stream.write("hello i am " + local.key.toString("hex"))
-    // stream.on("data", function (data) {
-        // console.log("data:", data.toString())
-    //     db.ready(hyperdungeon)
-    // })
-
-    // if that fails then we're the only alive peer, so we create a server and listen on it so that
-    // others have somewhere to connect to
 }
-var feeds =  []
+var feeds = []
+fs.readFile("./feeds.json", function(err, data) {
+    if (!err) {
+        feeds = JSON.parse(data)
+    }
+    connect("hyperdungeon")
+})
 module.exports.feeds = feeds
-connect("hyperdungeon")
