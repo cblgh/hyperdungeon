@@ -33,6 +33,9 @@ function connect(name) {
             readStream.pipe(stream) // reply
         })
     })
+    server.on("error", function(err) {
+        console.log(err)
+    })
 }
 
 var feeds = []
@@ -50,4 +53,11 @@ function start(name, key) {
     })
 }
 module.exports = start
-module.exports.connect = connect
+module.exports.connect = function(name) {
+    fs.readFile("./feeds.json", function(err, data) {
+        if (!err) {
+            feeds = JSON.parse(data)
+        }
+        connect(name)
+    })
+}
