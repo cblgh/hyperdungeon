@@ -25,5 +25,8 @@ describe you stand in the middle of a dark hallway. you hear whirring machines i
 #### `whereis <id|alias>`
 `whereis cblgh`
 
+#### `reply <msg>`  
+replies to the person who most recently wrote to you
+
 ### Other Commands
-##### `exit|look|aliases|messages|help`
+##### `whoami|look|aliases|messages|help|exit`
