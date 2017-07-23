@@ -7,9 +7,8 @@ var config = require("./config.js")
 var peernet  = require("peer-network")
 var network = peernet()
 var server = network.createServer()
-
 var local = config.local
-var db = hyperdb(config.feeds)
+var db 
 
 var rl = readline.createInterface({
     input: process.stdin,
@@ -42,42 +41,32 @@ function split(input) {
 // IDEA: pokemon inspired theme / collecting bunch of random monster at random spots on map, calculating the hash of the
 // position to generate them
 
-db.ready(function () {
+
+// PEERNET IDEA:
+// before anything else, we try to connect to the peernet hyperdungeon server if that fails, we create an instance
+// ourselves.  then we add ourselves to a list as the first hyperdb feed
+//
+// when someone connects, we receive their id, add them to the end of the feed list and then pass them the entire list
+// they then use that list to propagate hyperdb correspondingly
+//
+// to connect hyperdungeon peers initially we first try to announce to network
+local.ready(function() {
+    var stream = network.connect("hyperdungeon")
+    stream.write(local.key.toString("hex")) // tell server our id
+    // server replies with a list all of the instances that have connected to hyperdb
+    // (including our key)
+    stream.on("data", function (data) { 
+        var reply = JSON.parse(data.toString())
+        var feeds = config.join(reply, local.key.toString("hex"))
+        db = hyperdb(feeds)
+        db.ready(hyperdungeon)
+    })
+})
+
+function hyperdungeon() {
     var id = local.key.toString("hex")
     console.log("local key", id)
 
-    // PEERNET IDEA:
-    // before anything else, we try to connect to the peernet hyperdungeon server
-    // if that fails, we create an instance ourselves.
-    // then we add ourselves to a list as the first hyperdb feed
-    //
-    // when someone connects, we receive their id, add them to the end of the feed list and then pass them the entire list
-    // they then use that list to propagate hyperdb correspondingly
-    //
-    // to connect hyperdungeon peers initially we first
-    // try to announce to network
-    var stream = network.connect("hyperdungeon")
-
-    stream.write("hello i am " + id.toString("hex"))
-    stream.on("data", function (data) {
-        console.log("data:", data.toString())
-    })
-
-    // if that fails then we're the only alive peer, so we create a server and listen on it so that
-    // others have somewhere to connect to
-    stream.on("error", function (data) {
-        server.on("connection", function (stream) {
-            console.log("new connection")
-            var readStream = new Readable()
-            readStream.push("greeting stranger! i am " + id)
-            readStream.push(null) // signals end of the read stream
-            readStream.pipe(stream) // reply
-            stream.on("data", function (data) {
-                console.log("received:", data.toString())
-            })
-        })
-        server.listen("hyperdungeon") // listen on a name
-    })
 
     var sw = hyperdiscovery(db, {live: true})
     if (process.argv.indexOf("--sync") > -1) {
@@ -318,7 +307,7 @@ db.ready(function () {
         cursor = pos.x + "," + pos.y + " > "
         readCommand()
     })
-})
+}
 
 function append(key, val) {
     return get(key).then(function(arr) {
