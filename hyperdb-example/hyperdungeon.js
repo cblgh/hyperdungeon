@@ -3,6 +3,7 @@ var Readable = require("stream").Readable
 var hyperdiscovery = require("hyperdiscovery")
 var readline = require("readline")
 var util = require("./util.js")
+var mock = require("./mock-server.js")
 // use peer-network to connect new peers to the distributed mud instance
 var peernet  = require("peer-network")
 var network = peernet()
@@ -24,6 +25,7 @@ function printHelp() {
 }
 
 // keep track of which player ids have entered the mud 
+// currently unused
 function savePlayers(playerId, state) {
     get("players", function(players) {
         if (!players) { players = {} }
@@ -38,35 +40,39 @@ function split(input) {
     return [command, input.join(" ")] // and keep the rest of the string
 }
 
-// IDEA: pokemon inspired theme / collecting bunch of random monster at random spots on map, calculating the hash of the
-// position to generate them
-
-
 // PEERNET IDEA:
-// before anything else, we try to connect to the peernet hyperdungeon server if that fails, we create an instance
-// ourselves.  then we add ourselves to a list as the first hyperdb feed
-//
-// when someone connects, we receive their id, add them to the end of the feed list and then pass them the entire list
-// they then use that list to propagate hyperdb correspondingly
-//
-// to connect hyperdungeon peers initially we first try to announce to network
+// before anything else, we try to connect to the peernet hyperdungeon server.
+// if that fails, we create an instance ourselves. 
 local.ready(function() {
+    // try to connect to an existing server
     var stream = network.connect("hyperdungeon")
     stream.write(local.key.toString("hex")) // tell server our id
+    
+    // if that fails, start a server
+    stream.on("error", function() {
+        console.log("no such server found")
+        mock("hyperdungeon").then(function(feeds) {
+            start(feeds)
+        })
+    })
+
     // server replies with a list all of the instances that have connected to hyperdb
     // (including our key)
     stream.on("data", function (data) { 
-        var reply = JSON.parse(data.toString())
-        var feeds = util.join(reply, local.key.toString("hex"))
+        var feeds = JSON.parse(data.toString())
+        start(feeds)
+    })
+
+    function start(keys) {
+        var feeds = util.join(keys, local.key.toString("hex"))
         db = hyperdb(feeds)
         db.ready(hyperdungeon)
-    })
+    }
 })
 
 function hyperdungeon() {
     var id = local.key.toString("hex")
     console.log("local key", id)
-
 
     var sw = hyperdiscovery(db, {live: true})
     if (process.argv.indexOf("--sync") > -1) {
@@ -76,17 +82,15 @@ function hyperdungeon() {
 
     sw.on("connection", function(peer, type) {
         var peerId = peer.key.toString("hex")
-        console.log("a new peer has joined, zarathystras's forces grow stronger (" + peerId + ")")
-        savePlayers(peerId, "connected")
+        console.log("a new peer has joined, zarathystras's forces grow stronger")
+        // savePlayers(peerId, "connected")
         peer.on("close", function() {
-            console.log("a peer has left, zarathystras's forces grow weaker (" + peerId + ")")
-            savePlayers(peerId, "disconnected")
+            console.log("a peer has left, zarathystras's forces grow weaker")
+            // savePlayers(peerId, "disconnected")
         })
     })
 
     function getState(playerId) {
-        // console.log("get state")
-        // console.log("playerId", playerId)
         var getPos = get(playerId + "/pos")
         var getAlias = get(playerId + "/aliases")
         return Promise.all([getPos, getAlias]).then(function(values) {
@@ -104,7 +108,7 @@ function hyperdungeon() {
             lastIndex = msgs.length - 1
             setInterval(function() {
                 var getMessages = get(channel + "/messages")
-                var getAliases = get(id + "/aliases") // aliases belong to this user, thus id is used and not channel
+                var getAliases = get(id + "/aliases") // aliases belongs to this user, thus id is used and not channel
                 Promise.all([getMessages, getAliases]).then(function(values) {
                     var msgs, aliases
                     msgs = values[0] || []

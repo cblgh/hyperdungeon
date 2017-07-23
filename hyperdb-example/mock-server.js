@@ -8,11 +8,13 @@ function connect(name) {
     console.log("starting server at " + name + "..")
 
     server.listen("hyperdungeon") // listen on a name
-
     server.on("listening", function() {
         console.log("ready for connections")
     })
 
+    // when someone connects, we receive their feed key. if they are joining for the first time we add them to the end of
+    // the feed list and then pass them the entire list
+    // they then use that list to propagate their hyperdb instance 
     server.on("connection", function (stream) {
         console.log("new connection")
         stream.on("data", function (data) {
@@ -32,11 +34,17 @@ function connect(name) {
         })
     })
 }
+
 var feeds = []
-fs.readFile("./feeds.json", function(err, data) {
-    if (!err) {
-        feeds = JSON.parse(data)
-    }
-    connect("hyperdungeon")
-})
-module.exports.feeds = feeds
+function start(name) {
+    return new Promise(function(resolve, reject) {
+        fs.readFile("./feeds.json", function(err, data) {
+            if (!err) {
+                feeds = JSON.parse(data)
+            }
+            resolve(feeds)
+            connect(name)
+        })
+    })
+}
+module.exports = start
