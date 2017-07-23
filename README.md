@@ -5,7 +5,7 @@ _[wip wip wip]_
 
 ## Tutorial
 #### `npm install && npm start`
-Install all the packages needed and run the game. Currently you'll need at least another peer running to be able to do anything.
+The above installs all the packages needed and runs the game. Currently you'll need at least another peer (that is, a hyperdungeon session/player) running to be able to do anything.
 
 When you start your id will be printed out as  
 `local key 94dc2d7a9801034e1159525c1bf29a893a5fdf7a4e998d65e17f44ed86868dd9`
