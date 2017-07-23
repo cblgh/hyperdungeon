@@ -19,8 +19,8 @@ var rl = readline.createInterface({
 // META TODO: somehow allow people to just get this entire codebase as a dat itself
 
 function printHelp() {
-    console.log("directions: north, south, east, west")
-    console.log("commands: look, whereis <nick|id>, alias <nick>=<id>, describe <description>, exit, warp <id|nick>=x,y")
+    console.log("directions:\n\tnorth\n\tsouth\n\teast\n\twest")
+    console.log("commands:\n\tlook\n\twhoami\n\twrite <global|nick|id> <msg>\n\treply <msg>\n\taliases\n\tmessages\n\twhereis <nick|id>\n\talias <nick>=<id>\n\tdescribe <description>\n\texit\n\twarp <id|nick>=x,y")
 }
 
 function split(input) {
