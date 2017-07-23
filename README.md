@@ -1,5 +1,5 @@
 # hyperdungeon
-a distributed mud experiment ontop of dat and browserify
+a distributed mud experiment ontop of hypercore & hyperdb
 
 _[wip wip wip]_
 
