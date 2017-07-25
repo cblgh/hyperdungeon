@@ -1,7 +1,9 @@
 # hyperdungeon
 a distributed mud experiment ontop of hypercore & hyperdb
 
-_[wip wip wip]_
+☠️ _a dire work-in-progress_ ☠️  
+⚠️ _to potential adventurers:  
+this is not only a work in progress for a distrbuted MUD, it is also built ontop of a distributed database that's currently without a stable release. tread warily, stranger!_ 
 
 ## Tutorial
 #### `npm install && npm start`
