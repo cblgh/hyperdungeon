@@ -91,9 +91,10 @@ function hyperdungeon() {
     function updatePos(player, oldPos) {
         var newPos =  player.pos.x + "," + player.pos.y
         // move player
-        update(player.id + "/pos", player.pos)
-        // update old & new tile arrays
-        moveItem(oldPos + "/players", newPos + "/players", player.id)
+        return update(player.id + "/pos", player.pos).then(function() {
+            // update old & new tile arrays
+            return moveItem(oldPos + "/players", newPos + "/players", player.id)
+        })
     }
 
     function monitorMessages(channel) {
@@ -165,25 +166,29 @@ function hyperdungeon() {
                     case "north": 
                         console.log("you move north")
                         player.pos.y += 1
-                        updatePos(player, oldPos)
+                        //updatePos(player, oldPos)
+                        update(id + "/pos", player.pos)
                         break
                     case "s":
                     case "south":
                         console.log("you move south")
                         player.pos.y -= 1
-                        updatePos(player, oldPos)
+                        //updatePos(player, oldPos)
+                        update(id + "/pos", player.pos)
                         break
                     case "e":
                     case "east":
                         console.log("you move east")
                         player.pos.x += 1
-                        updatePos(player, oldPos)
+                        //updatePos(player, oldPos)
+                        update(id + "/pos", player.pos)
                         break
                     case "w":
                     case "west":
                         console.log("you move west")
                         player.pos.x -= 1
-                        updatePos(player, oldPos)
+                        //updatePos(player, oldPos)
+                        update(id + "/pos", player.pos)
                         break
                     case "help":
                         printHelp()
@@ -239,10 +244,11 @@ function hyperdungeon() {
                         location = {x: parseInt(location[0]), y: parseInt(location[1])}
                         console.log("warping %s to %j", target, location)
                         // get target's old location
-                        get(target + "/pos").then(function(old) {
+                        return get(target + "/pos").then(function(old) {
                             // update target's location
-                            updatePos({id: target, pos: location}, old)
-                            // update(target + "/pos", location)
+                            update(target + "/pos", location)
+                            //updatePos({id: target, pos: location}, old)
+                            return player
                         })
                         break
                     case "whereis":
@@ -274,6 +280,12 @@ function hyperdungeon() {
                     case "aliases":
                         console.log("%j", player.aliases)
                         break
+                    case "key":
+                        get(input).then(function(val) {
+                            console.log(val)
+                            return player
+                        })
+                        break
                     case "look":
                         var pos = player.pos.x + "," + player.pos.y 
                         console.log("your position is currently %s", pos)
@@ -282,15 +294,20 @@ function hyperdungeon() {
                                 description = "you're surrounded by the rock walls you've known since birth"
                             }
                             console.log(description) 
-                            return get(pos + "/players")
-                        }).then(function(players) {
-                            if (players) {
-                                console.log("you see %d other%s", players.length, players.length > 1 ? "s" : "")
-                                players.forEach(function(p) {
-                                    if (p in player.aliases) { p = player.aliases[p] }
-                                    console.log(p)
-                                })
-                            }
+                        //     return get(pos + "/players")
+                        // }).then(function(players) {
+                        //     players = players || []
+                        //     var index = players.indexOf(player.id)
+                        //     if (index >= 0) {
+                        //         players = players.splice(index, 1) // remove our player from on-tile players
+                        //     }
+                        //     if (players.length > 0) {
+                        //         console.log("you see %d other%s", players.length, players.length > 1 ? "s" : "")
+                        //         players.forEach(function(p) {
+                        //             if (p in player.aliases) { p = player.aliases[p] }
+                        //             console.log(p)
+                        //         })
+                        //     }
                             return player
                         })
                     case "describe":
@@ -327,18 +344,22 @@ function hyperdungeon() {
 
 // moves a value from one array to another
 function moveItem(oldKey, newKey, value) {
-    get(oldKey).then(function(arr) {
+    return get(oldKey).then(function(arr) {
         // remove from old array
         arr = arr || []
-        arr.splice(arr.indexOf(value), 1)
+        var index = arr.indexOf(value)
+        if (index >= 0) { // only remove index if it's actually in arr
+            arr.splice(index, 1)
+        }
         return update(oldKey, arr)
     }).then(function() {
         return get(newKey)
-    }).then(function(arr) {
-        // add to new array
-        arr = arr || []
-        arr.push(value)
-        return update(newKey, arr)
+            .then(function(arr) {
+                // add to new array
+                arr = arr || []
+                arr.push(value)
+                return update(newKey, arr)
+            })
     })
 }
 
