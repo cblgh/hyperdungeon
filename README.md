@@ -1,5 +1,5 @@
 # hyperdungeon
-a distributed mud experiment ontop of hypercore & hyperdb
+a distributed mud experiment ontop of [hypercore](https://github.com/mafintosh/hypercore) & [hyperdb](https://github.com/mafintosh/hyperdb)
 
 ☠️ _a dire work-in-progress_ ☠️  
 ⚠️ _to potential adventurers:  
