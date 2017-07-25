@@ -275,6 +275,12 @@ function hyperdungeon() {
                     case "aliases":
                         console.log("%j", player.aliases)
                         break
+                    case "key":
+                        get(input).then(function(val) {
+                            console.log(val)
+                            return player
+                        })
+                        break
                     case "look":
                         var pos = player.pos.x + "," + player.pos.y 
                         console.log("your position is currently %s", pos)
