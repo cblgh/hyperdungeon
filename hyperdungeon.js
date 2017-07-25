@@ -91,9 +91,10 @@ function hyperdungeon() {
     function updatePos(player, oldPos) {
         var newPos =  player.pos.x + "," + player.pos.y
         // move player
-        update(player.id + "/pos", player.pos)
+        update(player.id + "/pos", player.pos).then(function() {
+            moveItem(oldPos + "/players", newPos + "/players", player.id)
+        })
         // update old & new tile arrays
-        moveItem(oldPos + "/players", newPos + "/players", player.id)
     }
 
     function monitorMessages(channel) {
@@ -284,7 +285,9 @@ function hyperdungeon() {
                             console.log(description) 
                             return get(pos + "/players")
                         }).then(function(players) {
-                            if (players) {
+                            players = players || []
+                            players = players.splice(players.indexOf(player.id), 1) // remove our player from on-tile players
+                            if (players.length > 0) {
                                 console.log("you see %d other%s", players.length, players.length > 1 ? "s" : "")
                                 players.forEach(function(p) {
                                     if (p in player.aliases) { p = player.aliases[p] }
